@@ -6,7 +6,7 @@ import { getUserFromRequest } from '@/lib/auth';
 // PUT - Update vault item
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getUserFromRequest(request);
@@ -14,6 +14,7 @@ export async function PUT(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     const { encryptedData, salt } = await request.json();
 
     if (!encryptedData || !salt) {
@@ -26,7 +27,7 @@ export async function PUT(
     await connectDB();
 
     const item = await Vault.findOneAndUpdate(
-      { _id: params.id, userId: user.userId },
+      { _id: id, userId: user.userId },
       { encryptedData, salt },
       { new: true }
     );
@@ -45,7 +46,7 @@ export async function PUT(
 // DELETE - Delete vault item
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const user = getUserFromRequest(request);
@@ -53,10 +54,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { id } = await params;
     await connectDB();
 
     const item = await Vault.findOneAndDelete({
-      _id: params.id,
+      _id: id,
       userId: user.userId,
     });
 
